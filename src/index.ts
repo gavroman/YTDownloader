@@ -22,4 +22,5 @@ bot.help(onHelp);
 bot.on(message('text'), (ctx) => onTextMessage(ctx));
 bot.on(callbackQuery('data'), (ctx) => onSelectedFormatAction(ctx));
 
-bot.launch();
+await bot.launch();
+console.log('Bot lounched');

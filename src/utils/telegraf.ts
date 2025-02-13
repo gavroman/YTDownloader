@@ -8,7 +8,7 @@ export const replyOnMessage = (ctx: BotMessageContext, ...args: Parameters<BotMe
 
 export const getUser = (ctx: BotContext) => ctx.from;
 
-export const getUserDirname = (user: User, baseDirname = BASE_STORAGE_DIRNAME) => {
+export const getUserDirname = (user: Pick<User, 'username' | 'id'>, baseDirname = BASE_STORAGE_DIRNAME) => {
     const userDirname = user.username || String(user.id);
     return path.resolve('.', path.join(baseDirname, userDirname));
 };

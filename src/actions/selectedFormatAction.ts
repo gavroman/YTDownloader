@@ -1,15 +1,10 @@
-import {
-    getLoader,
-    getMessageEditor,
-    getTextFromMessageStoredData,
-    textJoiner2Lines,
-} from '@src/helpers/outputText';
+import {getMessageEditor, getTextFromMessageStoredData, textJoiner2Lines} from '@src/helpers/outputText';
 import {FFMPEG} from '@src/services/ffmpeg';
 import {MessageService} from '@src/services/messages';
 import {YtDlp} from '@src/services/yt-dlp';
 import {BotCallbackDataContext} from '@src/types';
+import {deleteFile} from '@src/utils/file.js';
 import {omit} from '@src/utils/pick';
-// import {getRepeater} from '@src/utils/repeat';
 import {getResolution} from '@src/utils/strings';
 import filenamify from 'filenamify';
 
@@ -24,7 +19,11 @@ const parseCallbackData = (
     }
 };
 
-export const onSelectedFormatAction = async (ctx: BotCallbackDataContext) => {
+export const onSelectedFormatAction = async (ctx: BotCallbackDataContext, tryToUploadInTg?: boolean) => {
+    if (!tryToUploadInTg && !ctx.S3) {
+        return ctx.editMessageText('Мне некуда грузить видос. Облако недоступно(');
+    }
+
     if (
         !ctx.callbackQuery.message ||
         !('reply_to_message' in ctx.callbackQuery.message) ||
@@ -36,7 +35,6 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext) => {
     }
 
     const editMessageTextHTML = getMessageEditor(ctx, {parse_mode: 'HTML'});
-    // const repeatUpdate = getRepeater(10_000, 20);
 
     const {videoFormatId, audioFormatId} = parseCallbackData(ctx.callbackQuery.data);
     if (!videoFormatId || !audioFormatId) {
@@ -54,9 +52,7 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext) => {
     const baseText = getTextFromMessageStoredData(omit(videoData, ['videoUrl', 'formats']));
     const withBaseText = (text: string) => textJoiner2Lines(baseText, text);
 
-    const startText = withBaseText('Расчехляю скачивалку');
-    // repeatUpdate((i) =>
-    editMessageTextHTML(startText /*+ getLoader(i)*/);
+    editMessageTextHTML(withBaseText('Расчехляю скачивалку'));
 
     const formats = await MessageService.getFormatsByMessageId(ctx, String(messageId), {
         videoFormatId,
@@ -66,8 +62,7 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext) => {
         return editMessageTextHTML(withBaseText('Не нашел такой формат, можно еще раз ссылочку?'));
     }
 
-    // repeatUpdate((i) =>
-    editMessageTextHTML(withBaseText('Качаю видос') /*+ getLoader(i)*/);
+    editMessageTextHTML(withBaseText('Качаю видос'));
 
     const {videoUrl: url, videoTitle} = videoData;
     const yt = await YtDlp.init(ctx.from);
@@ -93,8 +88,8 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext) => {
     console.log('gavromanLog: audioFilePath', audioFilePath);
 
     const mergeSatartText = withBaseText('Соединяю аудио и видео дорожки');
-    // repeatUpdate((i) =>
-    editMessageTextHTML(mergeSatartText /*+ getLoader(i)*/);
+
+    editMessageTextHTML(mergeSatartText);
 
     const resolution = getResolution(formats.video);
     const storedFileName = [
@@ -119,8 +114,8 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext) => {
     }
     console.log('resultFilePath:', resultFilePath);
 
-    Bun.file(videoFilePath).delete();
-    Bun.file(audioFilePath).delete();
+    await deleteFile(videoFilePath);
+    await deleteFile(audioFilePath);
 
     const displayFileName = [
         filenamify(videoTitle, {replacement: '_'}),
@@ -146,8 +141,8 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext) => {
 
         // если есть s3 - грузим
         const uploadS3Text = textJoiner2Lines(tgUploadErrorText, 'Загружаю в облако');
-        // repeatUpdate((i) =>
-        editMessageTextHTML(uploadS3Text /*+ getLoader(i)*/);
+
+        editMessageTextHTML(uploadS3Text);
 
         const s3DownloadUrl = await ctx.S3.uploadFile(
             {path: resultFilePath, name: displayFileName},
@@ -162,5 +157,5 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext) => {
     }
 
     MessageService.deleteMessage(ctx, messageId).catch(console.error);
-    Bun.file(resultFilePath).delete().catch(console.error);
+    await deleteFile(resultFilePath);
 };

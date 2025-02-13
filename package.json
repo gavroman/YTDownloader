@@ -3,14 +3,15 @@
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start": "bun ./src/index.ts",
-    "start:dev": "bun --watch ./src/index.ts",
-    "lint": "bun --bun eslint",
-    "lint:fix": "bun --bun eslint --fix"
+    "start": "tsx ./src/index.ts",
+    "start:dev": "tsx --watch ./src/index.ts",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
-    "@types/bun": "latest",
+    "@tsconfig/node22": "^22.0.0",
+    "@types/node": "^22.13.2",
     "eslint": "^9.18.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.25.2",
@@ -19,10 +20,8 @@
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-unicorn": "^56.0.1",
+    "prettier": "^3.5.0",
     "typescript-eslint": "^8.21.0"
-  },
-  "peerDependencies": {
-    "typescript": "^5.7.3"
   },
   "dependencies": {
     "@telegraf/entity": "^0.5.0",
@@ -33,6 +32,8 @@
     "filesize": "^10.1.6",
     "percentile": "^1.6.0",
     "telegraf": "^4.16.3",
-    "telegraf-session-local": "^2.1.1"
+    "telegraf-session-local": "^2.1.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   }
 }

@@ -1,4 +1,4 @@
-import {$} from 'bun';
+import {runCommand} from '@src/utils/runCommand';
 import path from 'path';
 
 export class FFMPEG {
@@ -6,7 +6,9 @@ export class FFMPEG {
         const outputFilenameFullPath = path.resolve(videoFullPath, `../${filename}`);
 
         console.log('outputFilenameFullPath', outputFilenameFullPath);
-        await $`ffmpeg -i ${videoFullPath} -i ${audioFullPath} -vcodec copy -acodec copy ${outputFilenameFullPath}`;
+        await runCommand(
+            `ffmpeg -i ${videoFullPath} -i ${audioFullPath} -vcodec copy -acodec copy ${outputFilenameFullPath}`
+        );
 
         return outputFilenameFullPath;
     }

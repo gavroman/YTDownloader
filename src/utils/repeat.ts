@@ -1,5 +1,5 @@
 export const getRepeater = (interval: number, limit: number) => {
-    let timer: Nullable<Timer> = null;
+    let timer: Nullable<NodeJS.Timeout> = null;
 
     return (fn: (i: number) => void) => {
         clearInterval(timer || 0);

@@ -9,6 +9,7 @@ import {getFormatsKeyboard} from '@src/helpers/outputMarkup';
 
 export const gotVideoUrlAction = async (ctx: BotMessageContext) => {
     const videoUrl = ctx.message.text.trim();
+    console.log('gotVideoUrlAction: ', videoUrl);
 
     try {
         const {protocol, host} = new URL(videoUrl);
@@ -20,9 +21,11 @@ export const gotVideoUrlAction = async (ctx: BotMessageContext) => {
     }
 
     const yt = await YtDlp.init(ctx.from);
+    console.log(yt);
 
     try {
         const {title: videoTitle, formats: allFormats, duration} = await yt.$getVideoInfo(videoUrl);
+        console.log('videoTitle', videoTitle);
         const formats = selectDisplayFormats(allFormats);
         const videoDuration = getDurationString(duration);
 

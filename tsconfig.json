@@ -1,42 +1,20 @@
 {
   "compilerOptions": {
-    // Enable latest features
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleDetection": "force",
-    "jsx": "react-jsx",
-    "allowJs": true,
-    // Bundler mode
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    // Best practices
-    "strict": true,
-    "skipLibCheck": true,
-    "noFallthroughCasesInSwitch": true,
-    // Some stricter flags (disabled by default)
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false,
-    "baseUrl": "./",
+    "target": "ES2022",                  // Соответствует последним версиям JS
+    "module": "ESNext",                  // Использование ECMAScript модулей
+    "moduleResolution": "node",          // Использование резолюции модулей Node.js
+    "esModuleInterop": true,             // Совместимость с CommonJS
+    "forceConsistentCasingInFileNames": true, // Убедитесь в согласованности регистра
+    "strict": true,                      // Включение строгого режима
+    "skipLibCheck": true,                // Пропустить проверку типов библиотек
+    "baseUrl": ".",                      // Базовая директория для разрешения путей
     "paths": {
-      "@src/*": [
-        "src/*"
-      ],
-      "@root/*": [
-        "./*"
-      ]
-    }
+      "@src/*": ["src/*"]                // Настройка алиасов
+    },
+    "noEmit": true,
+    "outDir": "./dist",                  // Директория для компиляции
+    "allowSyntheticDefaultImports": true // Позволяет импортировать модули с помощью синтаксиса default import
   },
-  "include": [
-    "src",
-    "**/*.d.ts"
-  ],
-  "files": [
-    "src/global.d.ts"
-  ]
+  "include": ["src/**/*.ts"],               // Указывает, какие файлы будут включены
+  "exclude": ["node_modules"]            // Исключает node_modules из компиляции
 }
