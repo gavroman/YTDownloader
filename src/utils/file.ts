@@ -3,7 +3,7 @@ import {mkdir, access, unlink} from 'node:fs/promises';
 export const createDirIfNotExists = async (dirname: string) =>
     access(dirname)
         .then(() => {})
-        .catch(() => mkdir(dirname));
+        .catch(() => mkdir(dirname, {recursive: true}));
 
 export const exists = async (path: string) =>
     access(path)
