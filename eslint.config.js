@@ -19,7 +19,7 @@ export default [
         rules: {
             'func-style': ['error', 'expression'],
             'no-restricted-syntax': ['off', 'ForOfStatement'],
-            'no-console': ['warn'],
+            'no-console': ['error'],
             'prefer-template': 'error',
             quotes: ['error', 'single', {avoidEscape: true}],
             'arrow-body-style': ['error', 'as-needed'],
@@ -29,6 +29,11 @@ export default [
                 {
                     patterns: ['.*'],
                 },
+            ],
+            'padding-line-between-statements': [
+                'error',
+                {blankLine: 'always', prev: ['*'], next: ['return']},
+                {blankLine: 'always', prev: ['import'], next: ['const', 'export', 'class', 'function']},
             ],
         },
     },

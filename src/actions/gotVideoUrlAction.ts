@@ -6,10 +6,13 @@ import {MAX_TG_FILE_LIMIT_BYTES} from '@src/constants';
 import {MessageService} from '@src/services/messages';
 import {getDurationString, getTextFromMessageStoredData} from '@src/helpers/outputText';
 import {getFormatsKeyboard} from '@src/helpers/outputMarkup';
+import {resolveModuleLoggerSync} from '@src/services/logger';
 
 export const gotVideoUrlAction = async (ctx: BotMessageContext) => {
+    const logger = resolveModuleLoggerSync(ctx, 'gotVideoUrlAction');
+
     const videoUrl = ctx.message.text.trim();
-    console.log('gotVideoUrlAction: ', videoUrl);
+    logger.info({videoUrl});
 
     try {
         const {protocol, host} = new URL(videoUrl);
@@ -17,18 +20,26 @@ export const gotVideoUrlAction = async (ctx: BotMessageContext) => {
             throw new Error('Invalid url');
         }
     } catch (_e) {
+        logger.warn('Invalid url');
+
         return ctx.reply('Неправильная ссылка, такое не скачать, даже если очень постараться');
     }
 
-    const yt = await YtDlp.init(ctx.from);
-    console.log(yt);
-
+    const yt = await YtDlp.init(ctx.from, ctx.logger);
     try {
-        const {title: videoTitle, formats: allFormats, duration} = await yt.$getVideoInfo(videoUrl);
-        console.log('videoTitle', videoTitle);
+        const videoInfo = await yt.$getVideoInfo(videoUrl);
+        if (!videoInfo) {
+            logger.error('No video info');
+
+            return ctx.reply('Не получилось достать информацию о видео, можно еще раз ссылочку?');
+        }
+
+        const {title: videoTitle, formats: allFormats, duration} = videoInfo;
+        logger.info('videoInfo', videoInfo);
         const formats = selectDisplayFormats(allFormats);
         const videoDuration = getDurationString(duration);
 
+        logger.info('videoDuration', videoDuration);
         await MessageService.addMessage(ctx, ctx.message.message_id, {
             videoUrl,
             videoTitle,
@@ -39,13 +50,14 @@ export const gotVideoUrlAction = async (ctx: BotMessageContext) => {
         const text = getTextFromMessageStoredData({videoTitle, videoDuration, formats});
         await replyOnMessage(ctx, text, {parse_mode: 'HTML', ...getFormatsKeyboard(formats)});
 
-        // ctx.fsm.makeTransition('formatsListed');
-
-        console.table(formats.map(({audio}) => audio));
-        console.table(formats.map(({video}) => video));
-        console.log('gotVideoUrlAction', text);
+        logger.verbose(
+            'Formats',
+            formats.map(({audio}) => audio)
+        );
+        logger.verbose({response: text});
     } catch (e) {
-        console.error(e);
+        logger.error(e);
+
         return replyOnMessage(ctx, 'Не получилось достать доступные форматы этого видоса(');
     }
 };
@@ -79,7 +91,6 @@ export const selectDisplayFormats = (formats: Format[]): DisplayFormat[] => {
         return result;
     }, {});
     const finalVideoFormats = Object.values(widthsMap);
-
     const percentilesToGet = Array.from(finalVideoFormats.keys()).map((n) =>
         Math.floor(((n + 1) / finalVideoFormats.length) * 100)
     );

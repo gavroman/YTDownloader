@@ -2,6 +2,7 @@ import {S3} from '@src/services/s3';
 import type {FSM} from '@src/utils/fsm';
 import type {Context, NarrowedContext} from 'telegraf';
 import type {CallbackQuery, Message, Update} from 'telegraf/types';
+import winston from 'winston';
 
 export type BotState = 'idle' | 'waitForQuality' | 'downloading';
 
@@ -43,6 +44,7 @@ export type BotContext = {
     session: Session;
     fsm: FSM<BotState, BotTransitionNames>;
     S3?: S3;
+    logger: winston.Logger;
 } & Context;
 
 export type BotMessageContext = NarrowedContext<

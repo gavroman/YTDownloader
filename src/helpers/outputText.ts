@@ -41,10 +41,11 @@ export const getTextFromDisplayFormat = ({video: v, audio: a}: DisplayFormat) =>
         .join('\n');
 
 export const getDurationString = (duration: number) => {
-    const {hours, minutes, seconds} = intervalToDuration({start: 0, end: duration});
+    const {hours = 0, minutes = 0, seconds = 0} = intervalToDuration({start: 0, end: duration});
+
     return [hours, minutes, seconds]
         .map(String)
-        .map((n) => (n.length === 1 ? '0' : ''))
+        .map((n) => (n.length === 1 ? `0${n}` : n))
         .filter(Boolean)
         .join(' : ');
 };
@@ -57,3 +58,5 @@ export const getMessageEditor =
 export const textJoiner2Lines = (...strings: string[]) => strings.join('\n\n');
 
 export const getLoader = (i: number) => ' .'.repeat(i % 8);
+
+export const getLink = (text: string, url: string) => `<a href="${url}">${text}</a>`;

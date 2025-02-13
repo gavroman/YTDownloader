@@ -7,7 +7,6 @@ export const getRepeater = (interval: number, limit: number) => {
         fn(counter);
 
         timer = setInterval(() => {
-            console.log('repeat i');
             counter++;
             fn(counter);
             if (counter > limit) {

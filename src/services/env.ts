@@ -10,7 +10,6 @@ export const getEnv = () => {
     const s3keyId = process.env.S3_STATIC_KEY_ID;
     const s3keySecret = process.env.S3_STATIC_KEY_SECRET;
     const s3BucketName = process.env.S3_BUCKET_NAME;
-
     const cookiesFilepath = process.env.COOKIES_FILEPATH;
     const socksProxy = process.env.SOCKS_PROXY;
 

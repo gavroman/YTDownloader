@@ -1,7 +1,6 @@
 export const pick = <T extends AnyObject, K extends keyof T>(
     obj: T,
     keys: K[],
-
     emptyFieldValue: any = null
 ): Pick<T, K> =>
     keys.reduce<Pick<T, K>>(
@@ -11,6 +10,7 @@ export const pick = <T extends AnyObject, K extends keyof T>(
             } else {
                 result[key] = emptyFieldValue;
             }
+
             return result;
         },
         {} as Pick<T, K>
@@ -22,6 +22,7 @@ export const omit = <T extends AnyObject, K extends keyof T>(obj: T, keys: K[]):
             if (!keys.includes(key as K)) {
                 acc[key as Exclude<keyof T, K>] = obj[key];
             }
+
             return acc;
         },
         {} as Omit<T, K>

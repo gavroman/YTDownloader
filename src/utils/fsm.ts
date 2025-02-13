@@ -12,7 +12,6 @@ export class FSM<TState extends string, TTransitionName extends string> {
 
     public makeTransition(transitionName: TTransitionName) {
         const transition = this.transitions[transitionName];
-
         if (this.state === transition.from) {
             this.__state = transition.to;
             // this.stateChangeHandlers.forEach((handler) => handler(this.state));
