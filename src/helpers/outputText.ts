@@ -50,12 +50,25 @@ export const getDurationString = (duration: number) => {
         .join(' : ');
 };
 
-export const getMessageEditor =
-    <C extends Context<Update>>(ctx: C, extra: Parameters<C['editMessageText']>[1]) =>
-    (text: string) =>
-        ctx.editMessageText(text, extra);
+export const getUpdateAppendMessageEditor = <C extends Context<Update>>(
+    ctx: C,
+    extra: Parameters<C['editMessageText']>[1]
+) => {
+    let updateCounter = 0;
+    let oldText = '';
+
+    return async (text: string) => {
+        const newText = oldText ? textJoiner1Line(oldText, `${updateCounter}) ${text}`) : text;
+
+        await ctx.editMessageText(newText, extra);
+        oldText = newText;
+        updateCounter++;
+    };
+};
 
 export const textJoiner2Lines = (...strings: string[]) => strings.join('\n\n');
+
+export const textJoiner1Line = (...strings: string[]) => strings.join('\n');
 
 export const getLoader = (i: number) => ' .'.repeat(i % 8);
 

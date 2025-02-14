@@ -1,9 +1,4 @@
-import {
-    getLink,
-    getMessageEditor,
-    getTextFromMessageStoredData,
-    textJoiner2Lines,
-} from '@src/helpers/outputText';
+import {getLink, getUpdateAppendMessageEditor, getTextFromMessageStoredData} from '@src/helpers/outputText';
 import {FFMPEG} from '@src/services/ffmpeg';
 import {resolveModuleLoggerSync} from '@src/services/logger';
 import {MessageService} from '@src/services/messages';
@@ -47,7 +42,7 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext, tryToU
     }
     logger.verbose('onSelectedFormatAction', ctx.callbackQuery.data);
 
-    const editMessageTextHTML = getMessageEditor(ctx, {parse_mode: 'HTML'});
+    const editMessageTextHTML = getUpdateAppendMessageEditor(ctx, {parse_mode: 'HTML'});
     const {videoFormatId, audioFormatId} = parseCallbackData(ctx.callbackQuery.data);
     if (!videoFormatId || !audioFormatId) {
         logger.error('no videoFormatId or audioFormatId');
@@ -68,8 +63,8 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext, tryToU
     logger.info('videoData', videoData);
 
     const baseText = getTextFromMessageStoredData(pick(videoData, ['videoTitle', 'videoDuration']));
-    const withBaseText = (text: string) => textJoiner2Lines(baseText, text);
-    editMessageTextHTML(withBaseText('Расчехляю скачивалку'));
+    await editMessageTextHTML(`${baseText}\n`);
+    await editMessageTextHTML('Расчехляю скачивалку');
 
     const formats = await MessageService.getFormatsByMessageId(ctx, String(messageId), {
         videoFormatId,
@@ -78,10 +73,10 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext, tryToU
     if (!formats?.audio || !formats?.video) {
         logger.error('no formats');
 
-        return editMessageTextHTML(withBaseText('Не нашел такой формат, можно еще раз ссылочку?'));
+        return editMessageTextHTML('Не нашел такой формат, можно еще раз ссылочку?');
     }
 
-    editMessageTextHTML(withBaseText('Качаю видос'));
+    await editMessageTextHTML('Качаю видос');
 
     const {videoUrl: url, videoTitle} = videoData;
     const yt = await YtDlp.init(ctx.from, ctx.logger);
@@ -93,12 +88,11 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext, tryToU
     if (!videoFilePath || !audioFilePath) {
         logger.error('no videoFilePath or audioFilePath');
 
-        return editMessageTextHTML(withBaseText('Не смог скачать. Можно еще раз ссылочку?'));
+        return editMessageTextHTML('Не смог скачать. Можно еще раз ссылочку?');
     }
     logger.info({videoFilePath, audioFilePath});
 
-    const mergeSatartText = withBaseText('Соединяю аудио и видео дорожки');
-    editMessageTextHTML(mergeSatartText);
+    await editMessageTextHTML('Соединяю аудио и видео дорожки');
 
     const resolution = getResolution(formats.video);
     const storedFileName = [
@@ -123,7 +117,7 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext, tryToU
         logger.error('resultFilePath is null');
 
         return editMessageTextHTML(
-            withBaseText('Не смог соединить видео и аудио. Начинаем все с начала. Можно еще раз ссылочку?')
+            'Не смог соединить видео и аудио. Начинаем все с начала. Можно еще раз ссылочку?'
         );
     }
     logger.info({resultFilePath});
@@ -147,20 +141,19 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext, tryToU
         logger.info('video uploaded in tg');
     } catch (_e) {
         logger.warn('failed to upload video to tg');
-        const tgUploadErrorText = withBaseText(
+        await editMessageTextHTML(
             'Произошла ошибка при загрузке этого видоса в телеграмм, возможно файл слишком большой'
         );
+
         if (!ctx.S3) {
             // если нет с3 то все
             logger.error('S3 not inited');
 
-            return ctx.editMessageText(tgUploadErrorText);
+            return editMessageTextHTML('Не могу загрузить в облако, кря(');
         }
 
         // если есть s3 - грузим
-        const uploadS3Text = textJoiner2Lines(tgUploadErrorText, 'Загружаю в облако');
-        editMessageTextHTML(uploadS3Text);
-
+        await editMessageTextHTML('Загружаю в облако');
         const s3DownloadUrl = await ctx.S3.uploadUserVideoFile(
             {path: resultFilePath, name: displayFileName},
             String(ctx.from.username || ctx.from.id)
@@ -168,12 +161,12 @@ export const onSelectedFormatAction = async (ctx: BotCallbackDataContext, tryToU
         if (!s3DownloadUrl) {
             logger.error('s3DownloadUrl is null');
 
-            return editMessageTextHTML(withBaseText('Произошла ошибка при загрузке в облако'));
+            return editMessageTextHTML('Произошла ошибка при загрузке в облако');
         }
         logger.info({s3DownloadUrl});
 
-        editMessageTextHTML(
-            withBaseText(`Скаченное видео доступно по ссылке: ${getLink(videoTitle, s3DownloadUrl)}`)
+        await editMessageTextHTML(
+            `Готово! Скаченное видео доступно по ссылке: ${getLink(videoTitle, s3DownloadUrl)}`
         );
     }
 

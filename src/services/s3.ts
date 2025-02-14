@@ -33,9 +33,9 @@ export class S3 {
     }
 
     public async uploadUserVideoFile({path, name}: UploadFile, dirname: string): Promise<Nullable<string>> {
-        const fullS3Path = name ? `/users/${name}` : undefined;
+        const fullS3dirname = dirname ? `/users/${dirname}` : '/';
         try {
-            const result = await this.YandexS3.Upload({path, name: fullS3Path, save_name: !name}, dirname);
+            const result = await this.YandexS3.Upload({path, name, save_name: !name}, fullS3dirname);
             this.logger.info('uploadUserVideoFile', result);
 
             return !result || Array.isArray(result) ? null : result.Location;
