@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2022",                  // Соответствует последним версиям JS
+    "target": "ES2023",                  // Соответствует последним версиям JS
     "module": "ESNext",                  // Использование ECMAScript модулей
     "moduleResolution": "node",          // Использование резолюции модулей Node.js
     "esModuleInterop": true,             // Совместимость с CommonJS

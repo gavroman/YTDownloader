@@ -94,7 +94,9 @@ export class S3 extends AbstractService<Props> {
                         },
                     ),
                 )
-            ).filter<CloudStoredFile>((file): file is CloudStoredFile => !!file);
+            )
+                .filter<CloudStoredFile>((file): file is CloudStoredFile => !!file)
+                .toSorted((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
 
             this.logger.info('getDirnameFiles', {files});
 
