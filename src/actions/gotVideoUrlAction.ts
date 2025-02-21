@@ -1,14 +1,15 @@
 import {YtDlp} from '@src/services/yt-dlp';
-import {BotMessageContext, DisplayFormat, Format} from '@src/types';
+import {BotMessageContext, DisplayFormat, Format} from '@src/app/types';
 import {replyOnMessage} from '@src/utils/telegraf';
 import percentile from 'percentile';
-import {MAX_TG_FILE_LIMIT_BYTES} from '@src/constants';
+import {MAX_TG_FILE_LIMIT_BYTES} from '@src/app/constants';
 import {MessageService} from '@src/services/messages';
 import {getDurationString, getTextFromMessageStoredData} from '@src/helpers/outputText';
 import {getFormatsKeyboard} from '@src/helpers/outputMarkup';
 import {resolveModuleLoggerSync} from '@src/services/logger';
+import {asyncHandler} from '@src/helpers/highOrderHandler';
 
-export const gotVideoUrlAction = async (ctx: BotMessageContext) => {
+export const gotVideoUrlAction = asyncHandler(async (ctx: BotMessageContext) => {
     const logger = resolveModuleLoggerSync(ctx, 'gotVideoUrlAction');
 
     const videoUrl = ctx.message.text.trim();
@@ -22,16 +23,16 @@ export const gotVideoUrlAction = async (ctx: BotMessageContext) => {
     } catch (_e) {
         logger.warn('Invalid url');
 
-        return ctx.reply('Неправильная ссылка, такое не скачать, даже если очень постараться');
+        return replyOnMessage(ctx, 'Неправильная ссылка, такое не скачать, даже если очень постараться');
     }
 
-    const yt = await YtDlp.init(ctx.from, ctx.logger);
+    const yt = await YtDlp.init(ctx.logger);
     try {
         const videoInfo = await yt.$getVideoInfo(videoUrl);
         if (!videoInfo) {
             logger.error('No video info');
 
-            return ctx.reply('Не получилось достать информацию о видео, можно еще раз ссылочку?');
+            return replyOnMessage(ctx, 'Не получилось достать информацию о видео, можно еще раз ссылочку?');
         }
 
         const {title: videoTitle, formats: allFormats, duration} = videoInfo;
@@ -52,19 +53,18 @@ export const gotVideoUrlAction = async (ctx: BotMessageContext) => {
 
         logger.verbose(
             'Formats',
-            formats.map(({audio}) => audio)
+            formats.map(({audio}) => audio),
         );
-        logger.verbose({response: text});
     } catch (e) {
         logger.error(e);
 
         return replyOnMessage(ctx, 'Не получилось достать доступные форматы этого видоса(');
     }
-};
+});
 
 export const selectDisplayFormats = (formats: Format[]): DisplayFormat[] => {
     const httpsAudioFormats = formats.filter(
-        ({audio_ext, abr, protocol}) => audio_ext && audio_ext === 'm4a' && abr && protocol === 'https'
+        ({audio_ext, abr, protocol}) => audio_ext && audio_ext === 'm4a' && abr && protocol === 'https',
     );
     const maxAudioFormatSize = httpsAudioFormats.at(-1)?.filesize;
     const httpsVideoFormats = formats.filter(({video_ext, vbr, protocol, filesize, width, format_note}) => {
@@ -92,7 +92,7 @@ export const selectDisplayFormats = (formats: Format[]): DisplayFormat[] => {
     }, {});
     const finalVideoFormats = Object.values(widthsMap);
     const percentilesToGet = Array.from(finalVideoFormats.keys()).map((n) =>
-        Math.floor(((n + 1) / finalVideoFormats.length) * 100)
+        Math.floor(((n + 1) / finalVideoFormats.length) * 100),
     );
     const finalAudioFormats = (
         percentile(percentilesToGet, Array.from(httpsAudioFormats.keys())) as number[]

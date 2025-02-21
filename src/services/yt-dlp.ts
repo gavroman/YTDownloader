@@ -1,30 +1,15 @@
-import {Format} from '@src/types';
+import {Format} from '@src/app/types';
 import {createDirIfNotExists, exists} from '@src/utils/file';
-import {omit, pick} from '@src/utils/pick';
+import {pick} from '@src/utils/pick';
 import {getUserDirname} from '@src/utils/telegraf';
 import {filesize as fileSize} from 'filesize';
 import path from 'path';
 import {User} from 'telegraf/types';
-import {getEnv} from '@src/services/env';
+import {getEnv} from '@src/app/env';
 import {runCommand} from '@src/utils/runCommand';
 import winston from 'winston';
-
-const FILTERED_FORMAT_FIELDS = [
-    'format_id',
-    'format',
-    'format_note',
-    'ext',
-    'protocol',
-    'width',
-    'height',
-    'audio_ext',
-    'video_ext',
-    'vbr',
-    'abr',
-    'tbr',
-    'filesize',
-    'quality',
-];
+import {AbstractService, ServiceAsyncInitFn} from '@src/services/types';
+import {FILTERED_FORMAT_FIELDS} from '@src/app/constants';
 
 export type VideoData = {
     title: string;
@@ -34,9 +19,10 @@ export type VideoData = {
 
 export type PartialFormatDownloadInfo = Pick<Format, 'format_id' | 'ext' | 'video_ext' | 'audio_ext'>;
 
-export type DownloadFormatInput = {
+export type DownloadFormatProps = {
     url: string;
     outputFilename: string;
+    user: Pick<User, 'id' | 'username'>;
 } & PartialFormatDownloadInfo;
 
 export const isVideoFormat = (format: Pick<Format, 'video_ext'>) => format.video_ext !== null;
@@ -49,44 +35,41 @@ export const getFormatFilename = (partialFormat: PartialFormatDownloadInfo) => {
     return `${format_id}.${formatType}.${ext}`;
 };
 
-type Options = {
+type ConstructorProps = {
     cookiesFilePath?: string;
     socksProxy?: string;
-    logger: winston.Logger;
+    storageDirname: string;
 };
 
-export class YtDlp {
-    static async init(user: Pick<User, 'username' | 'id'>, logger: winston.Logger) {
-        const userDirname = getUserDirname(user);
-        await createDirIfNotExists(userDirname);
+const DEFAULT_STORAGE_DIR = 'video_storage';
+const DEFAULT_COOKIES_FILE = 'cookies.txt';
 
-        const {cookiesFilepath: coockiesArg = 'cookies.txt', socksProxy} = getEnv();
+export class YtDlp extends AbstractService<ConstructorProps> {
+    static init: ServiceAsyncInitFn<Pick<ConstructorProps, 'storageDirname'> | void, YtDlp> = async (
+        logger,
+        {storageDirname = DEFAULT_STORAGE_DIR} = {storageDirname: DEFAULT_STORAGE_DIR},
+    ) => {
+        const {cookiesFilepath: coockiesArg = DEFAULT_COOKIES_FILE, socksProxy} = getEnv();
         const cookiesFilePath = path.resolve(coockiesArg);
         if (await exists(cookiesFilePath)) {
-            return new YtDlp(userDirname, {cookiesFilePath, socksProxy, logger});
+            return new YtDlp({cookiesFilePath, socksProxy, storageDirname}, logger);
         }
 
-        return new YtDlp(userDirname, {socksProxy, logger});
-    }
+        return new YtDlp({socksProxy, storageDirname}, logger);
+    };
 
-    private constructor(
-        private readonly dirname: string,
-        private readonly options: Options
-    ) {
-        this.logger = options.logger.child({module: 'yt-dlp'});
-        this.logger.info('YtDlp initialized', {dirname: this.dirname, options: omit(options, ['logger'])});
+    private constructor(props: ConstructorProps, logger: winston.Logger) {
+        super(props, logger, 'yt-dlp');
 
         return this;
     }
 
-    private logger: winston.Logger;
-
     private getCookiesArg() {
-        return this.options.cookiesFilePath ? `--cookies ${this.options.cookiesFilePath}` : '';
+        return this.props.cookiesFilePath ? `--cookies ${this.props.cookiesFilePath}` : '';
     }
 
     private getSocksProxyArg() {
-        return this.options.socksProxy ? `--proxy ${this.options.socksProxy}` : '';
+        return this.props.socksProxy ? `--proxy ${this.props.socksProxy}` : '';
     }
 
     public async $getVideoInfo(url: string): Promise<Nullable<VideoData>> {
@@ -132,11 +115,15 @@ export class YtDlp {
     public async $downloadFormat({
         outputFilename,
         url,
+        user,
         ...format
-    }: DownloadFormatInput): Promise<Nullable<string>> {
+    }: DownloadFormatProps): Promise<Nullable<string>> {
+        const userDirname = getUserDirname(user, this.props.storageDirname);
+        await createDirIfNotExists(userDirname);
+
         const {format_id} = format;
         const formatFilename = getFormatFilename(format);
-        const filePath = path.join(this.dirname, `${outputFilename}.${formatFilename}`);
+        const filePath = path.join(userDirname, `${outputFilename}.${formatFilename}`);
         const command = [
             'yt-dlp',
             this.getSocksProxyArg(),

@@ -1,12 +1,11 @@
-import {S3} from '@src/services/s3';
 import type {FSM} from '@src/utils/fsm';
 import type {Context, NarrowedContext} from 'telegraf';
 import type {CallbackQuery, Message, Update} from 'telegraf/types';
 import winston from 'winston';
 
-export type BotState = 'idle' | 'waitForQuality' | 'downloading';
+export type SessionState = 'idle' | 'waitForQuality' | 'downloading';
 
-export type BotTransitionNames = 'formatsListed' | 'qualitySelected' | 'videoDownloaded';
+export type SessionTransitionNames = 'formatsListed' | 'qualitySelected' | 'videoDownloaded';
 
 export type MessageId = number | string;
 
@@ -22,6 +21,8 @@ export type Format = {
     video_ext: Nullable<string>;
     vbr: number;
     abr: number;
+    vcodec: string;
+    acodec: string;
     tbr: number;
     filesize: number;
     filesizeHumanReadable: Nullable<string>;
@@ -38,13 +39,15 @@ export type StoredMessageData = {
 
 export type MessageStorage = Record<MessageId, StoredMessageData>;
 
-export type Session = {state: BotState; messagesWithVideoUrls: MessageStorage};
+export type Session = {state: SessionState; messagesWithVideoUrls: MessageStorage};
+
+export type Settings = {uploadInTg: boolean};
 
 export type BotContext = {
     session: Session;
-    fsm: FSM<BotState, BotTransitionNames>;
-    S3?: S3;
+    fsm: FSM<SessionState, SessionTransitionNames>;
     logger: winston.Logger;
+    settings: Settings;
 } & Context;
 
 export type BotMessageContext = NarrowedContext<
@@ -58,3 +61,12 @@ export type BotCallbackDataContext = NarrowedContext<
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     Update.CallbackQueryUpdate<Record<'data', {}> & CallbackQuery.DataQuery>
 >;
+
+export type NextFn = () => Promise<void>;
+
+export type CloudStoredFile = {
+    name: string;
+    size: number;
+    lastModified: Date;
+    url: string;
+};

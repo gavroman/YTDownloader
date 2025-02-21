@@ -1,4 +1,4 @@
-import {BotContext, DisplayFormat, MessageId, StoredMessageData} from '@src/types';
+import {BotContext, DisplayFormat, MessageId, StoredMessageData} from '@src/app/types';
 
 export class MessageService {
     static getMessages = async (ctx: BotContext) => ctx.session.messagesWithVideoUrls;
@@ -15,13 +15,13 @@ export class MessageService {
         ctx.session.messagesWithVideoUrls[key] || null;
 
     static deleteMessage = async (ctx: BotContext, key: MessageId) => {
-        delete ctx.session.messagesWithVideoUrls[key];
+        delete ctx.session.messagesWithVideoUrls[String(key)];
     };
 
     static getFormatsByMessageId = async (
         ctx: BotContext,
         messageId: MessageId,
-        {audioFormatId, videoFormatId}: {audioFormatId: string; videoFormatId: string}
+        {audioFormatId, videoFormatId}: {audioFormatId: string; videoFormatId: string},
     ): Promise<Nullable<DisplayFormat>> => {
         const message = await MessageService.getMessage(ctx, messageId);
         if (!message) {
@@ -30,7 +30,7 @@ export class MessageService {
 
         return (
             message.formats.find(
-                ({audio, video}) => audio.format_id === audioFormatId && video.format_id === videoFormatId
+                ({audio, video}) => audio.format_id === audioFormatId && video.format_id === videoFormatId,
             ) || null
         );
     };

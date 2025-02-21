@@ -52,7 +52,7 @@ export default [
                     singleQuote: true,
                     tabWidth: 4,
                     useTabs: false,
-                    trailingComma: 'es5',
+                    trailingComma: 'all',
                     bracketSpacing: false,
                 },
             ],
@@ -83,6 +83,10 @@ export default [
                 },
             ],
             '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+            '@typescript-eslint/no-unused-expressions': [
+                'error',
+                {allowShortCircuit: true, allowTernary: true},
+            ],
         },
     },
 ];

@@ -24,7 +24,7 @@ export class FSM<TState extends string, TTransitionName extends string> {
 
     constructor(
         private __state: TState,
-        private transitions: Transitions<TState, TTransitionName>
+        private transitions: Transitions<TState, TTransitionName>,
     ) {
         this.__initialState = this.__state;
     }

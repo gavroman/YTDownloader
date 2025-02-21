@@ -1,6 +1,6 @@
 import {MessageService} from '@src/services/messages';
 import {SessionService} from '@src/services/session';
-import {BotContext} from '@src/types';
+import {BotContext} from '@src/app/types';
 import {MiddlewareFn} from 'telegraf';
 
 export const storageInitMiddlware: MiddlewareFn<BotContext> = async (ctx, next) => {

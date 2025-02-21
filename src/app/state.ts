@@ -1,8 +1,8 @@
-import type {BotState, BotTransitionNames} from '@src/types';
+import type {SessionState, SessionTransitionNames} from '@src/app/types';
 import {FSM} from '@src/utils/fsm';
 
-export const getFSM = (initialState: BotState = 'idle') =>
-    new FSM<BotState, BotTransitionNames>(initialState, {
+export const getFSM = (initialState: SessionState = 'idle') =>
+    new FSM<SessionState, SessionTransitionNames>(initialState, {
         formatsListed: {
             from: 'idle',
             to: 'waitForQuality',

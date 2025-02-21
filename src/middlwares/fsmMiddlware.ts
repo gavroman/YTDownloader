@@ -1,6 +1,6 @@
 import {SessionService} from '@src/services/session';
-import {getFSM} from '@src/state';
-import type {BotContext} from '@src/types';
+import {getFSM} from '@src/app/state';
+import type {BotContext} from '@src/app/types';
 import type {MiddlewareFn} from 'telegraf';
 
 export const finiteStateMachineMiddlware: MiddlewareFn<BotContext> = async (ctx, next) => {

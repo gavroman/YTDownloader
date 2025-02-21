@@ -6,7 +6,7 @@ export class FFMPEG {
         const outputFilenameFullPath = path.resolve(videoFullPath, `../${filename}`);
 
         await runCommand(
-            `ffmpeg -i ${videoFullPath} -i ${audioFullPath} -vcodec copy -acodec copy ${outputFilenameFullPath}`
+            `ffmpeg -i ${videoFullPath} -i ${audioFullPath} -vcodec copy -acodec copy ${outputFilenameFullPath}`,
         );
 
         return outputFilenameFullPath;
