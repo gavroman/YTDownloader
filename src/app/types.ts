@@ -12,7 +12,7 @@ export type MessageId = number | string;
 export type Format = {
     format_id: string;
     format: string;
-    format_note: string;
+    format_note: Nullable<string>;
     ext: string;
     protocol: string;
     width: number;

@@ -64,15 +64,15 @@ export const gotVideoUrlAction = asyncHandler(async (ctx: BotMessageContext) => 
 
 export const selectDisplayFormats = (formats: Format[]): DisplayFormat[] => {
     const httpsAudioFormats = formats.filter(
-        ({audio_ext, abr, protocol}) => audio_ext && audio_ext === 'm4a' && abr && protocol === 'https',
+        ({audio_ext, protocol}) => audio_ext && audio_ext === 'mp4' && protocol === 'm3u8_native',
     );
-    const maxAudioFormatSize = httpsAudioFormats.at(-1)?.filesize;
-    const httpsVideoFormats = formats.filter(({video_ext, vbr, protocol, filesize, width, format_note}) => {
-        if (!video_ext || video_ext !== 'mp4' || !vbr || protocol !== 'https') {
+
+    const httpsVideoFormats = formats.filter(({video_ext, vbr, protocol, width, format_note}) => {
+        if (!video_ext || video_ext !== 'mp4' || !vbr || protocol !== 'm3u8_native') {
             return false;
         }
 
-        if (filesize > MAX_TG_FILE_LIMIT_BYTES - (maxAudioFormatSize || 0) || width < 600) {
+        if (width < 600) {
             return false;
         }
 

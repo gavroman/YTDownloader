@@ -25,16 +25,11 @@ export const getTextFromMessageStoredData = ({
         .join('\n');
 };
 
-export const getTextFromDisplayFormat = ({video: v, audio: a}: DisplayFormat) =>
+export const getTextFromDisplayFormat = ({video: v}: DisplayFormat) =>
     [
-        ['Разрешение', `<b>${getResolution(v)}</b> ${escapers.HTML(v.format_note) || ''}`],
-        ['Размер', escapers.HTML(filesize(v.filesize + a.filesize))],
-        ['Битрейт', escapers.HTML(`video - ${v.vbr}, audio - ${a.abr}`)],
-        ['Кодеки', escapers.HTML(`video - ${v.vcodec}, audio - ${a.acodec}`)],
-        // ['Размер видео', v.filesizeHumanReadable ? escapers.HTML(v.filesizeHumanReadable) : v.filesize],
-        // ['Битрейт видео', escapers.HTML(String(v.vbr))],
-        // ['Размер аудио', a.filesizeHumanReadable ? escapers.HTML(a.filesizeHumanReadable) : a.filesize],
-        // ['Битрейт аудио', escapers.HTML(String(a.abr))],
+        ['Разрешение', `<b>${getResolution(v)}</b>`],
+        ['Битрейт', escapers.HTML(`video - ${v.vbr}`)],
+        ['Кодеки', escapers.HTML(`video - ${v.vcodec}`)],
     ]
         .map(([caption, value], i) => `${i ? ' '.repeat(8) : ''}<code>${caption}:</code> ${value}`)
         .join('\n');
